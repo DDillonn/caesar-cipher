@@ -1,45 +1,48 @@
-"""
-This module takes care of starting the API Server, Loading the DB and Adding the endpoints
-"""
-import os
-from flask import Flask, request, jsonify, url_for
-from flask_migrate import Migrate
-from flask_swagger import swagger
-from flask_cors import CORS
-from utils import APIException, generate_sitemap
-from admin import setup_admin
-from models import db, User
-#from models import Person
+alphabet = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']
 
-app = Flask(__name__)
-app.url_map.strict_slashes = False
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DB_CONNECTION_STRING')
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-MIGRATE = Migrate(app, db)
-db.init_app(app)
-CORS(app)
-setup_admin(app)
+def caesar(start_text, shift_amount, cipher_direction):
+  end_text = ""
+  if cipher_direction == "decode":
+    shift_amount *= -1
+  for char in start_text:
+    #TODO-3: What happens if the user enters a number/symbol/space?
+    #Can you fix the code to keep the number/symbol/space when the text is encoded/decoded?
+    #e.g. start_text = "meet me at 3"
+    #end_text = "•••• •• •• 3"
+    if char in alphabet:
+      position = alphabet.index(char)
+      new_position = position + shift_amount
+      end_text += alphabet[new_position]
+    else:
+      end_text += char
+  print(f"Here's the {cipher_direction}d result: {end_text}")
 
-# Handle/serialize errors like a JSON object
-@app.errorhandler(APIException)
-def handle_invalid_usage(error):
-    return jsonify(error.to_dict()), error.status_code
+#TODO-1: Import and print the logo from art.py when the program starts.
+from art import logo
+print(logo)
 
-# generate sitemap with all your endpoints
-@app.route('/')
-def sitemap():
-    return generate_sitemap(app)
+#TODO-4: Can you figure out a way to ask the user if they want to restart the cipher program?
+#e.g. Type 'yes' if you want to go again. Otherwise type 'no'.
+#If they type 'yes' then ask them for the direction/text/shift again and call the caesar() function again?
+#Hint: Try creating a while loop that continues to execute the program if the user types 'yes'.
+should_end = False
+while not should_end:
 
-@app.route('/user', methods=['GET'])
-def handle_hello():
+  direction = input("Type 'encode' to encrypt, type 'decode' to decrypt:\n")
+  text = input("Type your message:\n").lower()
+  shift = int(input("Type the shift number:\n"))
+  #TODO-2: What if the user enters a shift that is greater than the number of letters in the alphabet?
+  #Try running the program and entering a shift number of 45.
+  #Add some code so that the program continues to work even if the user enters a shift number greater than 26. 
+  #Hint: Think about how you can use the modulus (%).
+  shift = shift % 26
 
-    response_body = {
-        "msg": "Hello, this is your GET /user response "
-    }
+  caesar(start_text=text, shift_amount=shift, cipher_direction=direction)
 
-    return jsonify(response_body), 200
+  restart = input("Type 'yes' if you want to go again. Otherwise type 'no'.\n")
+  if restart == "no":
+    should_end = True
+    print("Goodbye")
+    
 
-# this only runs if `$ python src/main.py` is executed
-if __name__ == '__main__':
-    PORT = int(os.environ.get('PORT', 3000))
-    app.run(host='0.0.0.0', port=PORT, debug=False)
+
